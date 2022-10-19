@@ -2,15 +2,12 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-city-card',
-  templateUrl: './city-card.component.html',
-  styles: [
-  ]
+  template: 'TODO City',
+  standalone: true,
+  imports: [],
 })
 export class CityCardComponent implements OnInit {
+  constructor() {}
 
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
+  ngOnInit(): void {}
 }

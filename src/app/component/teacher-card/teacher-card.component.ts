@@ -1,11 +1,36 @@
 import { Component, OnInit } from '@angular/core';
+import { FakeHttpService } from 'src/app/data-access/fake-http.service';
+import { TeacherStore } from 'src/app/data-access/teacher.store';
+import { CardType } from 'src/app/model/card.model';
+import { Teacher } from 'src/app/model/teacher.model';
+import { CardComponent } from 'src/app/ui/card/card.component';
 
 @Component({
   selector: 'app-teacher-card',
-  templateUrl: './teacher-card.component.html',
+  template: `<app-card
+    [list]="teachers"
+    [type]="cardType"
+    customClass="bg-light-red"
+  ></app-card>`,
+  styles: [
+    `
+      ::ng-deep .bg-light-red {
+        background-color: rgba(250, 0, 0, 0.1);
+      }
+    `,
+  ],
+  standalone: true,
+  imports: [CardComponent],
 })
 export class TeacherCardComponent implements OnInit {
-  constructor() {}
+  teachers: Teacher[] = [];
+  cardType = CardType.TEACHER;
 
-  ngOnInit(): void {}
+  constructor(private http: FakeHttpService, private store: TeacherStore) {}
+
+  ngOnInit(): void {
+    this.http.fetchTeachers$.subscribe((t) => this.store.addAll(t));
+
+    this.store.teachers$.subscribe((t) => (this.teachers = t));
+  }
 }
