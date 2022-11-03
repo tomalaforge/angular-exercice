@@ -1,36 +1,62 @@
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe, NgForOf } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { switchMap, tap } from 'rxjs';
 import { FakeHttpService } from 'src/app/data-access/fake-http.service';
 import { StudentStore } from 'src/app/data-access/student.store';
-import { CardType } from 'src/app/model/card.model';
-import { Student } from 'src/app/model/student.model';
-import { CardComponent } from 'src/app/ui/card/card.component';
+import { ListItemComponent } from 'src/app/ui/list-item/list-item.component';
+import { randStudent } from './../../data-access/fake-http.service';
 
 @Component({
   selector: 'app-student-card',
-  template: `<app-card
-    [list]="students"
-    [type]="cardType"
-    customClass="bg-light-green"
-  ></app-card>`,
+  template: `
+    <div
+      class="border-2 border-black rounded-md p-4 w-fit flex flex-col gap-3 bg-light-red"
+    >
+      <img src="assets/img/student.webp" width="200px" />
+
+      <section>
+        <list-item
+          *ngFor="let item of students$ | async"
+          [name]="item.firstname"
+          [id]="item.id"
+          (delete)="deleteStudent($event)"
+        >
+        </list-item>
+      </section>
+
+      <button
+        class="border border-blue-500 bg-blue-300 p-2 rounded-sm"
+        (click)="addNewItem()"
+      >
+        Add
+      </button>
+    </div>
+  `,
   standalone: true,
   styles: [
     `
-      ::ng-deep .bg-light-green {
+      .bg-light-green {
         background-color: rgba(0, 250, 0, 0.1);
       }
     `,
   ],
-  imports: [CardComponent],
+  imports: [ListItemComponent, NgForOf, AsyncPipe],
 })
-export class StudentCardComponent implements OnInit {
-  students: Student[] = [];
-  cardType = CardType.STUDENT;
+export class StudentCardComponent {
 
-  constructor(private http: FakeHttpService, private store: StudentStore) {}
+  studentStore = inject(StudentStore);
+  http = inject(FakeHttpService);
+  students$ = this.http.fetchStudents$
+  .pipe(
+    tap((t) => this.studentStore.addAll(t)),
+    switchMap(() => this.studentStore.students$)
+  );
 
-  ngOnInit(): void {
-    this.http.fetchStudents$.subscribe((s) => this.store.addAll(s));
+  addNewItem() {
+    this.studentStore.addOne(randStudent());
+  }
 
-    this.store.students$.subscribe((s) => (this.students = s));
+  deleteStudent(id: number) {
+    this.studentStore.deleteOne(id);
   }
 }
